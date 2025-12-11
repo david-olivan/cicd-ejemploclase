@@ -1,0 +1,66 @@
+name: CI Pipeline
+
+# Decirle sobre qué triggers quiero que se dispare
+on:
+    push:
+        branches: [main]
+    pull_request:
+        branches: [main]
+
+jobs:
+    tests:
+        name: Test & Lint
+        runs-on: ubuntu-latest
+
+        steps:
+            # Paso 1 - Pillar el código
+            - name: Checkout el código
+              uses: actions/checkout@v4
+
+            # Paso 2 - Preparar Python
+            - name: Preparar Python
+              uses: actions/setup-python@v5
+              with:
+                python-version: '3.12'
+
+            # Paso 3 - Cachear las dependencias (opcional)
+            - name: Cachear dependencias
+              uses: actions/cache@v4
+              with:
+                path: '~/.cache/pip'
+                key: ${{ runner.os }}-pip-${{ hashFiles('requirements.txt') }}
+                # Linux-pip-098234324fdshfsdfoiufwur3249
+
+            # Paso 4 - Instalar dependencias
+            - name: Instalar dependencias
+              run: |
+                    python -m pip install --upgrade pip
+                    pip install -r requirements.txt
+                    pip install ruff
+
+            # Paso 5 - Instalar y mirar estilo con Lint
+            - name: Lanzar el Linter
+              run: |
+                    ruff check app/ tests/ --output-format=github
+
+            # Paso 6 - Correr los tests con normalidad
+            - name: Lanzar los tests
+              run: |
+                    pytest -v
+
+            # Paso 7 - Tirar los tests con cobertura
+            - name: Lanzar tests con cobertura
+              run: |
+                    pip install pytest-cov
+                    pytest -v --cov=app --cov-report=xml --cov-report=term-missing
+
+            # Paso 8 - Resumen personalizado
+            - name: Informe personalizado
+              run: |
+                    echo "Pipeline superado" >> $GITHUB_STEP_SUMMARY
+                    echo "" >> $GITHUB_STEP_SUMMARY
+                    echo "- Python: 3.12" >> $GITHUB_STEP_SUMMARY
+                    echo "- Tests: Superados" >> $GITHUB_STEP_SUMMARY
+                    echo "- Linting: Superado" >> $GITHUB_STEP_SUMMARY
+                    echo "" >> $GITHUB_STEP_SUMMARY
+                    echo "Enhorabuena campeón" >> $GITHUB_STEP_SUMMARY
