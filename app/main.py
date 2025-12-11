@@ -22,7 +22,7 @@ def health_check():
 @app.get("/suma/{a}/{b}")
 def suma(a: int, b: int):
     """Este endpoint suma dos números enteros"""
-    return{"resultado": a + b}
+    return{"resultado": a * b}
 
 @app.get("/info")
 def get_info():
